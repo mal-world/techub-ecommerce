@@ -1,3 +1,4 @@
+import productModel from "../models/productModel.js";
 import cartModel from "../models/cartModel.js";
 
 const cartController = {

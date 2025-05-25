@@ -39,6 +39,13 @@ class orderModel {
         const { rows } = await pool.query(query, [status, order_id]);
         return rows[0];
     }
+
+    static async getAll() {
+        const query = 'SELECT * FROM orders ORDER BY order_date DESC';
+        const { rows } = await pool.query(query);
+        return rows;
+    }
+
 }
 
 export default orderModel;

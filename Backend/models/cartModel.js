@@ -1,3 +1,5 @@
+import { pool } from "../config/postgresql.js";
+
 class cartModel {
     static async create(user_id) {
         const query = `
@@ -18,14 +20,14 @@ class cartModel {
             ci.quantity,
             pr.name AS product_name,
             pr.price,
-            pr.image_url,
+            pr.image_urls,
             pr.stock_quantity,
             (ci.quantity * pr.price) AS item_total
         FROM cart c
         LEFT JOIN cartItems ci ON c.cart_id = ci.cart_id
         LEFT JOIN products pr ON ci.product_id = pr.products_id
         WHERE c.user_id = $1
-        OEDER BY ci.cartItem_id
+        ORDER BY ci.cartItems_id
         `;
         const { rows } = await pool.query(query, [user_id]);
         return rows;

@@ -170,6 +170,16 @@ class productModel {
         );
         return rowCount > 0;
     }
+
+    static async updateStock(product_id, newQuantity) {
+        const query = `
+            UPDATE products
+            SET stock_quantity = $1
+            WHERE products_id = $2
+        `;
+        await pool.query(query, [newQuantity, product_id]);
+    }
+
 }
 
 export default productModel;

@@ -1,12 +1,13 @@
 import OrderItemModel from "../models/orderItemModel.js";
 import orderModel from "../models/orderModel.js";
 import paymentModel from "../models/paymentModel.js";
-import shippingModel from "../models/shippingModel.js";
+import cartModel from "../models/cartModel.js";
+import productModel from '../models/productModel.js';
 
 const orderController = {
   createOrder: async (req, res) => {
     try {
-      const { user_id, items, payment_method, shipping_info } = req.body;
+      const { user_id, items, payment_method } = req.body;
       
       // Calculate total amount
       const total_amount = items.reduce(
@@ -35,19 +36,9 @@ const orderController = {
         payment_method,
         total_amount
       );
-
-      // Create shipping record
-      const shipping = await shippingModel.create(
-        order.order_id,
-        shipping_info.method,
-        shipping_info.carrier,
-        shipping_info.cost,
-        shipping_info.estimated_date
-      );
-
       res.status(201).json({
         success: true,
-        data: { order, payment, shipping }
+        data: { order, payment }
       });
     } catch (error) {
       res.status(500).json({
@@ -71,11 +62,10 @@ const orderController = {
 
       const items = await OrderItemModel.findByOrderId(order_id);
       const payment = await paymentModel.findByOrderId(order_id);
-      const shipping = await shippingModel.findByOrderId(order_id);
 
       res.status(200).json({
         success: true,
-        data: { ...order, items, payment, shipping }
+        data: { ...order, items, payment }
       });
     } catch (error) {
       res.status(500).json({
@@ -109,28 +99,98 @@ const orderController = {
     }
   },
 
-  updateShippingTracking: async (req, res) => {
+  checkoutCart: async (req, res) => {
     try {
-      const { order_id } = req.params;
-      const { carrier, tracking_number } = req.body;
+      const { user_id, payment_method } = req.body;
 
-      const shipping = await shippingModel.updateTracking(
-        order_id,
-        carrier,
-        tracking_number
+      const cart_id = await cartModel.findCartByUserId(user_id);
+      const cartItems = await cartModel.findByUserId(user_id);
+
+      if (!cartItems || cartItems.length === 0) {
+        return res.json({
+          success: false,
+          message: "Cart is empty"
+        });
+      }
+
+      // Calculate total amount
+      const total_amount = cartItems.reduce(
+        (sum, item) => sum + item.quantity * parseFloat(item.price),
+        0
       );
 
-      res.status(200).json({
+      // Create order
+      const order = await orderModel.create(user_id, total_amount);
+
+      // Copy items to orderitems
+      await Promise.all(cartItems.map(item =>
+        OrderItemModel.create(
+          order.order_id,
+          item.product_id,
+          item.quantity,
+          item.price
+        )
+      ));
+
+      // Create payment
+      const payment = await paymentModel.create(
+        order.order_id,
+        payment_method,
+        total_amount
+      );
+
+      // (Optional) Decrease stock
+      await Promise.all(cartItems.map(async item => {
+        const product = await productModel.findById(item.product_id);
+        const newStock = product.stock_quantity - item.quantity;
+        await productModel.updateStock(item.product_id, newStock);
+      }));
+
+      // Clear cart
+      await cartModel.clearCart(cart_id);
+
+      res.json({
         success: true,
-        data: shipping
+        message: "Checkout successful",
+        data: { order, payment }
       });
+
     } catch (error) {
-      res.status(500).json({
+      res.json({
         success: false,
         message: error.message
       });
     }
+  },
+
+  //admin get all order
+  getAllOrders: async (req, res) => {
+    try {
+      const orders = await orderModel.getAll();
+      res.json({
+        success: true,
+        data: orders
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        message: error.message
+      });
+    }
+  },
+
+  //admin
+  getOrdersByUser: async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const orders = await orderModel.findByUserId(user_id);
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
+}
+
+
 };
 
 export default orderController;

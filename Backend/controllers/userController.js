@@ -141,4 +141,84 @@ export const verifyAdmin = async (req, res) => {
   }
 };
 
-export default { registrationUser, loginUser, loginAdmin, verifyAdmin, getUsers };
+export const getUserProfile = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.json({ success: false, message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findByPk(decoded.id, {
+      attributes: ['user_id', 'first_name', 'last_name', 'email', 'created_at']
+    });
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        join_date: user.created_at
+      }
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const updateUserProfile = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.json({ success: false, message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { first_name, last_name, email } = req.body;
+
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    // Update user data
+    user.first_name = first_name || user.first_name;
+    user.last_name = last_name || user.last_name;
+    
+    // Only update email if it's changed and valid
+    if (email && email !== user.email) {
+      if (!validator.isEmail(email)) {
+        return res.json({ success: false, message: 'Please enter a valid email' });
+      }
+      
+      const emailExists = await User.findOne({ where: { email } });
+      if (emailExists && emailExists.user_id !== user.user_id) {
+        return res.json({ success: false, message: 'Email already in use' });
+      }
+      
+      user.email = email;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      user: {
+        id: user.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export default { registrationUser, loginUser, loginAdmin, verifyAdmin, getUsers, getUserProfile, updateUserProfile };

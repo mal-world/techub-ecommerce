@@ -2,18 +2,17 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const LaptopPage = () => {
+const GearPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    category_id: 1, // Laptop category (change this to your actual laptop category ID)
+    category_id: 4, // Accessory category (change this to your actual category ID)
     brand_id: '',
     min_price: '',
     max_price: '',
-    search: '',
-    spec: {}
+    search: ''
   });
 
   // Fetch products and brands on component mount and when filters change
@@ -30,11 +29,7 @@ const LaptopPage = () => {
         const params = new URLSearchParams();
         for (const key in filters) {
           if (filters[key] !== '' && filters[key] !== null) {
-            if (key === 'spec') {
-              params.append(key, JSON.stringify(filters[key]));
-            } else {
-              params.append(key, filters[key]);
-            }
+            params.append(key, filters[key]);
           }
         }
 
@@ -59,31 +54,14 @@ const LaptopPage = () => {
     }));
   };
 
-  // Handle specification filter changes
-  const handleSpecChange = (specKey, value) => {
-    setFilters(prev => {
-      const newSpecs = { ...prev.spec };
-      if (value) {
-        newSpecs[specKey] = value;
-      } else {
-        delete newSpecs[specKey];
-      }
-      return {
-        ...prev,
-        spec: newSpecs
-      };
-    });
-  };
-
   // Reset all filters
   const resetFilters = () => {
     setFilters({
-      category_id: 1, // Laptop category
+      category_id: 4, // Accessory category
       brand_id: '',
       min_price: '',
       max_price: '',
-      search: '',
-      spec: {}
+      search: ''
     });
   };
 
@@ -156,71 +134,6 @@ const LaptopPage = () => {
                 />
               </div>
             </div>
-            
-            {/* Specifications Filter - Laptop specific */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Specifications</label>
-              
-              {/* Processor */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-600 mb-1">Processor</label>
-                <input
-                  type="text"
-                  placeholder="e.g. i5, Ryzen 7"
-                  onChange={(e) => handleSpecChange('processor', e.target.value)}
-                  value={filters.spec?.processor || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-              
-              {/* RAM */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-600 mb-1">RAM (GB)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 8, 16"
-                  onChange={(e) => handleSpecChange('ram', e.target.value)}
-                  value={filters.spec?.ram || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-              
-              {/* Storage */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-600 mb-1">Storage</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 256GB SSD, 1TB HDD"
-                  onChange={(e) => handleSpecChange('storage', e.target.value)}
-                  value={filters.spec?.storage || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-              
-              {/* Screen Size */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-600 mb-1">Screen Size (inches)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 13.3, 15.6"
-                  onChange={(e) => handleSpecChange('screen_size', e.target.value)}
-                  value={filters.spec?.screen_size || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-              
-              {/* Graphics */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-600 mb-1">Graphics</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Integrated, RTX 3060"
-                  onChange={(e) => handleSpecChange('graphics', e.target.value)}
-                  value={filters.spec?.graphics || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-            </div>
           </div>
         </div>
         
@@ -233,7 +146,7 @@ const LaptopPage = () => {
           ) : (
             <>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Laptops</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Accessories</h1>
                 <p className="text-gray-600">{products.length} products found</p>
               </div>
               
@@ -283,8 +196,7 @@ const LaptopPage = () => {
                         
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{product.brand_name}</span>
-                          <button 
-                          onClick={() => navigate(`/products/${product.products_id}`)}
+                          <button onClick={() => navigate(`/products/${product.products_id}`)} 
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
                             View Details
                           </button>
@@ -302,4 +214,4 @@ const LaptopPage = () => {
   );
 };
 
-export default LaptopPage;
+export default GearPage;

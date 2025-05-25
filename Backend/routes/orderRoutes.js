@@ -12,7 +12,12 @@ orderRouter.get('/:order_id', orderController.getOrderDetails);
 // get payment status
 orderRouter.patch('/payment/:payment_id', orderController.updatePaymentStatus);
 
-// update shipping
-orderRouter.patch('/:order_id/shipping', orderController.updateShippingTracking);
+//chechout
+orderRouter.post('/checkout', orderController.checkoutCart);
+
+//admin get all the order
+orderRouter.get('/', orderController.getAllOrders);
+
+orderRouter.get('/user/:user_id', orderController.getOrdersByUser);
 
 export default orderRouter;
